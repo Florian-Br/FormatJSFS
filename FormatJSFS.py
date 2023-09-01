@@ -2,7 +2,7 @@
 
 #setup args
 import argparse, sys 
-          
+import numpy as np          
 msg = "Takes flattened output from 2D realsfs and creates a matrix output for use with fastsimcoal2"
 
 parser = argparse.ArgumentParser(description = msg)
@@ -15,13 +15,19 @@ args = parser.parse_args()
 sfs_file = args.Input
 n1 = int(args.n1)
 n2 = int(args.n2)
+#read in file
+with open(sfs_file, 'r') as file:
+    sfs_data = file.read().strip().split()
+sfs_data = [float(x) for x in sfs_data]
 
-import numpy as np
+#define functions
+def add_last_to_first(input_sfs):
+    if len(input_sfs) >= 2:
+        input_sfs[0] += input_sfs[-1]
+        input_sfs[-1] = 0
+    return input_sfs
 
-def unflatten_sfs(sfs_file, n1, n2):
-    with open(sfs_file, 'r') as file:
-        sfs_data = file.read().strip().split()
-    sfs_data = [float(x) for x in sfs_data]
+def unflatten_sfs(sfs_data, n1, n2):
     ncols = 2 * n1 + 1
     nrows = 2 * n2 + 1
     return np.array(sfs_data).reshape((nrows, ncols))
@@ -42,7 +48,8 @@ def save_to_file(content, file_path):
         file.write(content)
 
 # Processing steps
-matrix = unflatten_sfs(sfs_file, n1, n2)
+sfs_data = add_last_to_first(sfs_data)
+matrix = unflatten_sfs(sfs_data, n1, n2)
 matrix = round_matrix(matrix)
 matrix = format_matrix_to_obs(matrix)
 
