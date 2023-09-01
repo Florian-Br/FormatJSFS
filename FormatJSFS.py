@@ -7,14 +7,17 @@ msg = "Takes flattened output from 2D realsfs and creates a matrix output for us
 
 parser = argparse.ArgumentParser(description = msg)
 parser.add_argument("-i", "--Input", help = "Input file from realSFS", required=True)
-parser.add_argument("-n1", help = "Number of diploid individuals in population 1", required=True)
-parser.add_argument("-n2", help = "Number of diploid individuals in population 2", required=True)
+parser.add_argument("-n1", help = "Number of haploid individuals in population 1", required=True)
+parser.add_argument("-n2", help = "Number of haploid individuals in population 2", required=True)
+parser.add_argument('-d', '--derived', action='store_false', 
+	help = "Keep derived alleles (default off)")
 args = parser.parse_args()
 
 #input 
 sfs_file = args.Input
 n1 = int(args.n1)
 n2 = int(args.n2)
+keep_derived = args.derived
 #read in file
 with open(sfs_file, 'r') as file:
     sfs_data = file.read().strip().split()
@@ -28,8 +31,8 @@ def add_last_to_first(input_sfs):
     return input_sfs
 
 def unflatten_sfs(sfs_data, n1, n2):
-    ncols = 2 * n1 + 1
-    nrows = 2 * n2 + 1
+    ncols = n1 + 1
+    nrows = n2 + 1
     return np.array(sfs_data).reshape((nrows, ncols))
 
 def round_matrix(matrix):
@@ -48,7 +51,9 @@ def save_to_file(content, file_path):
         file.write(content)
 
 # Processing steps
-sfs_data = add_last_to_first(sfs_data)
+if keep_derived == True:
+   sfs_data = add_last_to_first(sfs_data)
+   
 matrix = unflatten_sfs(sfs_data, n1, n2)
 matrix = round_matrix(matrix)
 matrix = format_matrix_to_obs(matrix)
